@@ -683,6 +683,8 @@ footer .heart { color: #ef4444; animation: heartbeat 1.5s ease infinite; display
     <li><a href="#gallery">Galeri</a></li>
     <li><a href="#portfolio">Portofolio</a></li>
     <li><a href="#contact">Kontak</a></li>
+    <li><a href="game.html"> Tic Tac Toe</a></li>
+    <li><a href="geser-tiga.html"> Geser Tiga</a></li>
   </ul>
   <div class="nav-actions">
     <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
@@ -1084,12 +1086,19 @@ hamburger.addEventListener('click', () => {
 
 navLinksEl.querySelectorAll('a').forEach(link => {
   link.addEventListener('click', (e) => {
-    e.preventDefault();
-    const targetId = link.getAttribute('href').substring(1);
-    const targetSection = document.getElementById(targetId);
-    if (targetSection) {
-      targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const href = link.getAttribute('href');
+
+    // Hanya scroll-smooth untuk link berupa anchor (#id) di halaman ini.
+    // Link ke halaman lain (mis. game.html) dibiarkan navigasi normal.
+    if (href.startsWith('#')) {
+      e.preventDefault();
+      const targetId = href.substring(1);
+      const targetSection = document.getElementById(targetId);
+      if (targetSection) {
+        targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
+
     hamburger.classList.remove('active');
     navLinksEl.classList.remove('active');
   });
