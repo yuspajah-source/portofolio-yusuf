@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARENA — Batu Gunting Kertas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink: #17161B;
+    --ink-2: #211F29;
+    --ink-3: #2B2933;
+    --paper: #F3EEE3;
+    --crimson: #D14B3B;
+    --crimson-dim: #7A2E24;
+    --gold: #E0A83E;
+    --jade: #4C9A82;
+    --muted: #8A8790;
+    --line: #3A3742;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin:0;
+    min-height:100%;
+    background:
+      radial-gradient(circle at 20% -10%, rgba(224,168,62,0.08), transparent 45%),
+      radial-gradient(circle at 85% 110%, rgba(209,75,59,0.10), transparent 50%),
+      var(--ink);
+    color: var(--paper);
+    font-family: 'Inter', sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 28px 16px;
+  }
+
+  .stage{
+    width: 100%;
+    max-width: 560px;
+  }
+
+  /* ---------- Header ---------- */
+  .eyebrow{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size: 11px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .eyebrow::before{
+    content:"";
+    width:18px; height:2px;
+    background: var(--crimson);
+    display:inline-block;
+  }
+  h1{
+    font-family: 'Anton', sans-serif;
+    font-weight: 400;
+    font-size: clamp(40px, 10vw, 58px);
+    letter-spacing: 0.01em;
+    line-height: 0.9;
+    margin: 0 0 24px 0;
+    color: var(--paper);
+  }
+  h1 span{ color: var(--crimson); }
+
+  /* ---------- Scoreboard ---------- */
+  .scoreboard{
+    display:grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items:center;
+    background: var(--ink-2);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-bottom: 18px;
+  }
+  .score-block{ text-align:center; }
+  .score-label{
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .score-num{
+    font-family: 'Anton', sans-serif;
+    font-size: 40px;
+    line-height: 1;
+    transition: transform 0.25s ease;
+  }
+  .score-num.you{ color: var(--gold); }
+  .score-num.cpu{ color: var(--crimson); }
+  .score-num.bump{ transform: scale(1.25); }
+
+  .vs-mid{
+    text-align:center;
+    padding: 0 14px;
+    border-left: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+  }
+  .round-num{
+    font-family:'Anton', sans-serif;
+    font-size: 20px;
+    color: var(--paper);
+  }
+  .streak{
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+    white-space: nowrap;
+  }
+  .streak b{ color: var(--gold); }
+
+  /* ---------- Arena ---------- */
+  .arena{
+    position: relative;
+    background: linear-gradient(180deg, var(--ink-2), var(--ink-3));
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 34px 20px 26px;
+    margin-bottom: 18px;
+    overflow: hidden;
+    min-height: 210px;
+    display:flex;
+    flex-direction: column;
+    align-items:center;
+    justify-content:center;
+  }
+  .arena::before{
+    content:"";
+    position:absolute;
+    top:0; left:50%;
+    width:1px; height:100%;
+    background: repeating-linear-gradient(
+      to bottom, var(--line) 0 6px, transparent 6px 14px
+    );
+    opacity:0.6;
+  }
+
+  .clash-row{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap: clamp(18px, 8vw, 60px);
+    width:100%;
+  }
+
+  .hand-wrap{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    width: 96px;
+  }
+  .hand{
+    font-size: 64px;
+    line-height:1;
+    filter: drop-shadow(0 6px 10px rgba(0,0,0,0.35));
+    transition: transform 0.15s ease;
+  }
+  .hand-tag{
+    font-size:10px;
+    letter-spacing:0.2em;
+    text-transform:uppercase;
+    color: var(--muted);
+  }
+  .hand-tag.you{ color: var(--gold); }
+  .hand-tag.cpu{ color: var(--crimson); }
+
+  .bolt{
+    font-family:'Anton', sans-serif;
+    font-size: 22px;
+    color: var(--muted);
+    opacity: 0.7;
+  }
+
+  @keyframes slideInLeft{
+    0%{ transform: translateX(-70px) rotate(-14deg); opacity:0; }
+    100%{ transform: translateX(0) rotate(0deg); opacity:1; }
+  }
+  @keyframes slideInRight{
+    0%{ transform: translateX(70px) rotate(14deg); opacity:0; }
+    100%{ transform: translateX(0) rotate(0deg); opacity:1; }
+  }
+  @keyframes clashShake{
+    0%, 100%{ transform: translateX(0); }
+    20%{ transform: translateX(-6px); }
+    40%{ transform: translateX(5px); }
+    60%{ transform: translateX(-3px); }
+    80%{ transform: translateX(2px); }
+  }
+  .hand.play-you{ animation: slideInLeft 0.45s cubic-bezier(.2,.8,.3,1); }
+  .hand.play-cpu{ animation: slideInRight 0.45s cubic-bezier(.2,.8,.3,1); }
+  .clash-row.shake{ animation: clashShake 0.35s ease; }
+
+  .result-banner{
+    margin-top: 18px;
+    font-family:'Anton', sans-serif;
+    font-size: 22px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 8px 22px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--ink);
+    color: var(--muted);
+    opacity: 0;
+    transform: translateY(-8px) scale(0.94);
+    transition: all 0.25s ease;
+  }
+  .result-banner.show{ opacity:1; transform: translateY(0) scale(1); }
+  .result-banner.win{ color: var(--jade); border-color: var(--jade); box-shadow: 0 0 0 1px var(--jade) inset; }
+  .result-banner.lose{ color: var(--crimson); border-color: var(--crimson); box-shadow: 0 0 0 1px var(--crimson) inset; }
+  .result-banner.draw{ color: var(--gold); border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
+
+  /* ---------- Choice buttons ---------- */
+  .choices{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .choice-btn{
+    background: var(--ink-2);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px 8px 12px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap: 8px;
+    cursor:pointer;
+    color: var(--paper);
+    font-family:'Inter', sans-serif;
+    font-weight:600;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+  }
+  .choice-btn .emoji{ font-size: 34px; }
+  .choice-btn:hover{
+    border-color: var(--gold);
+    transform: translateY(-3px);
+  }
+  .choice-btn:active{
+    transform: translateY(0) scale(0.96);
+  }
+  .choice-btn:focus-visible{
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+  }
+  .choice-btn:disabled{
+    opacity: 0.45;
+    cursor: default;
+    transform:none;
+  }
+
+  /* ---------- Footer: history + reset ---------- */
+  .footer-row{
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .history{
+    display:flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .history-dot{
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size: 12px;
+    border: 1px solid var(--line);
+    background: var(--ink-2);
+  }
+  .history-dot.win{ background: rgba(76,154,130,0.18); border-color: var(--jade); }
+  .history-dot.lose{ background: rgba(209,75,59,0.18); border-color: var(--crimson); }
+  .history-dot.draw{ background: rgba(224,168,62,0.18); border-color: var(--gold); }
+  .history-empty{
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .reset-btn{
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font-family:'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 8px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+  .reset-btn:hover{
+    border-color: var(--crimson);
+    color: var(--crimson);
+  }
+
+  .home-link-wrap{
+    margin-top: 14px;
+    text-align: center;
+  }
+  .home-link{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 999px;
+    transition: all 0.15s ease;
+  }
+  .home-link:hover{
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+  .home-link:focus-visible{
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+  }
+  .home-link .arrow{
+    transition: transform 0.15s ease;
+  }
+  .home-link:hover .arrow{
+    transform: translateX(-3px);
+  }
+
+  @media (max-width: 380px){
+    .hand{ font-size: 48px; }
+    .hand-wrap{ width: 76px; }
+    .clash-row{ gap: 14px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .hand.play-you, .hand.play-cpu, .clash-row.shake, .result-banner{
+      animation: none !important;
+      transition: opacity 0.2s ease !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+
+  <div class="eyebrow">Arena Duel</div>
+  <h1>BATU<br>GUNTING<span> KERTAS</span></h1>
+
+  <div class="scoreboard">
+    <div class="score-block">
+      <div class="score-label">Kamu</div>
+      <div class="score-num you" id="youScore">0</div>
+    </div>
+    <div class="vs-mid">
+      <div class="round-num" id="roundNum">R0</div>
+      <div class="streak" id="streakText">belum ada streak</div>
+    </div>
+    <div class="score-block">
+      <div class="score-label">Komputer</div>
+      <div class="score-num cpu" id="cpuScore">0</div>
+    </div>
+  </div>
+
+  <div class="arena">
+    <div class="clash-row" id="clashRow">
+      <div class="hand-wrap">
+        <div class="hand" id="youHand">✊</div>
+        <div class="hand-tag you">Kamu</div>
+      </div>
+      <div class="bolt">VS</div>
+      <div class="hand-wrap">
+        <div class="hand" id="cpuHand">✊</div>
+        <div class="hand-tag cpu">Komputer</div>
+      </div>
+    </div>
+    <div class="result-banner" id="resultBanner">Pilih senjatamu</div>
+  </div>
+
+  <div class="choices">
+    <button class="choice-btn" data-choice="batu">
+      <span class="emoji">✊</span>Batu
+    </button>
+    <button class="choice-btn" data-choice="gunting">
+      <span class="emoji">✌️</span>Gunting
+    </button>
+    <button class="choice-btn" data-choice="kertas">
+      <span class="emoji">🖐️</span>Kertas
+    </button>
+  </div>
+
+  <div class="footer-row">
+    <div class="history" id="history">
+      <span class="history-empty">Riwayat ronde akan muncul di sini</span>
+    </div>
+    <button class="reset-btn" id="resetBtn">Reset</button>
+  </div>
+
+  <div class="home-link-wrap">
+   <a href="index.html#home" class="home-link"><span class="arrow">←</span> Kembali ke Beranda</a>
+  </div>
+
+</div>
+
+<script>
+  const EMOJI = { batu: '✊', gunting: '✌️', kertas: '🖐️' };
+  const BEATS = { batu: 'gunting', gunting: 'kertas', kertas: 'batu' };
+
+  let youScore = 0, cpuScore = 0, round = 0;
+  let winStreak = 0; // positive = you streak, negative = cpu streak
+  let history = [];
+
+  const youScoreEl = document.getElementById('youScore');
+  const cpuScoreEl = document.getElementById('cpuScore');
+  const roundNumEl = document.getElementById('roundNum');
+  const streakTextEl = document.getElementById('streakText');
+  const youHandEl = document.getElementById('youHand');
+  const cpuHandEl = document.getElementById('cpuHand');
+  const clashRowEl = document.getElementById('clashRow');
+  const resultBannerEl = document.getElementById('resultBanner');
+  const historyEl = document.getElementById('history');
+  const buttons = document.querySelectorAll('.choice-btn');
+  const resetBtn = document.getElementById('resetBtn');
+
+  function randomChoice(){
+    const opts = Object.keys(EMOJI);
+    return opts[Math.floor(Math.random() * opts.length)];
+  }
+
+  function judge(you, cpu){
+    if (you === cpu) return 'draw';
+    return BEATS[you] === cpu ? 'win' : 'lose';
+  }
+
+  function bump(el){
+    el.classList.remove('bump');
+    void el.offsetWidth; // reflow to restart animation
+    el.classList.add('bump');
+  }
+
+  function updateHistory(outcome){
+    history.unshift(outcome);
+    if (history.length > 8) history.pop();
+
+    historyEl.innerHTML = '';
+    history.forEach(o => {
+      const dot = document.createElement('div');
+      dot.className = 'history-dot ' + o;
+      dot.textContent = o === 'win' ? 'M' : o === 'lose' ? 'K' : 'S';
+      historyEl.appendChild(dot);
+    });
+  }
+
+  function updateStreakText(){
+    if (winStreak >= 2){
+      streakTextEl.innerHTML = 'streak <b>' + winStreak + '🔥</b>';
+    } else if (winStreak <= -2){
+      streakTextEl.innerHTML = 'komputer streak <b>' + Math.abs(winStreak) + '</b>';
+    } else {
+      streakTextEl.textContent = 'belum ada streak';
+    }
+  }
+
+  function play(choice){
+    buttons.forEach(b => b.disabled = true);
+
+    const cpuChoice = randomChoice();
+    round += 1;
+    roundNumEl.textContent = 'R' + round;
+
+    // reset hand animation classes
+    youHandEl.classList.remove('play-you');
+    cpuHandEl.classList.remove('play-cpu');
+    void youHandEl.offsetWidth;
+
+    youHandEl.textContent = EMOJI[choice];
+    cpuHandEl.textContent = EMOJI[cpuChoice];
+    youHandEl.classList.add('play-you');
+    cpuHandEl.classList.add('play-cpu');
+
+    resultBannerEl.classList.remove('show', 'win', 'lose', 'draw');
+
+    setTimeout(() => {
+      clashRowEl.classList.add('shake');
+      setTimeout(() => clashRowEl.classList.remove('shake'), 350);
+
+      const outcome = judge(choice, cpuChoice);
+
+      if (outcome === 'win'){
+        youScore += 1;
+        winStreak = winStreak > 0 ? winStreak + 1 : 1;
+        youScoreEl.textContent = youScore;
+        bump(youScoreEl);
+        resultBannerEl.textContent = 'KAMU MENANG!';
+        resultBannerEl.classList.add('win');
+      } else if (outcome === 'lose'){
+        cpuScore += 1;
+        winStreak = winStreak < 0 ? winStreak - 1 : -1;
+        cpuScoreEl.textContent = cpuScore;
+        bump(cpuScoreEl);
+        resultBannerEl.textContent = 'KOMPUTER MENANG';
+        resultBannerEl.classList.add('lose');
+      } else {
+        winStreak = 0;
+        resultBannerEl.textContent = 'SERI';
+        resultBannerEl.classList.add('draw');
+      }
+
+      resultBannerEl.classList.add('show');
+      updateStreakText();
+      updateHistory(outcome);
+
+      buttons.forEach(b => b.disabled = false);
+    }, 420);
+  }
+
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => play(btn.dataset.choice));
+  });
+
+  resetBtn.addEventListener('click', () => {
+    youScore = 0; cpuScore = 0; round = 0; winStreak = 0; history = [];
+    youScoreEl.textContent = '0';
+    cpuScoreEl.textContent = '0';
+    roundNumEl.textContent = 'R0';
+    streakTextEl.textContent = 'belum ada streak';
+    youHandEl.textContent = '✊';
+    cpuHandEl.textContent = '✊';
+    resultBannerEl.textContent = 'Pilih senjatamu';
+    resultBannerEl.classList.remove('show', 'win', 'lose', 'draw');
+    historyEl.innerHTML = '<span class="history-empty">Riwayat ronde akan muncul di sini</span>';
+  });
+</script>
+
+</body>
+</html>
