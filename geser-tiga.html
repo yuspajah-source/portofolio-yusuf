@@ -90,6 +90,22 @@
   }
   .mode-btn:focus-visible{ outline: 2px solid var(--gold); outline-offset: 2px; }
 
+  /* ---------- Difficulty ---------- */
+  .difficulty-wrap{ display:none; margin-bottom:16px; }
+  .difficulty-wrap.show{ display:block; }
+  .difficulty-label{
+    font-size:10px; letter-spacing:0.2em; text-transform:uppercase;
+    color:var(--muted); margin-bottom:8px; text-align:center;
+  }
+  .difficulty-switch{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .difficulty-btn{
+    background:var(--ink-2); border:1px solid var(--line); border-radius:10px;
+    padding:10px 6px; color:var(--muted); font-family:'Inter',sans-serif;
+    font-weight:700; font-size:11px; cursor:pointer; transition:all .15s ease;
+  }
+  .difficulty-btn:hover{ border-color:var(--gold); color:var(--paper); }
+  .difficulty-btn.active{ background:rgba(76,154,130,.12); border-color:var(--jade); color:var(--jade); }
+
   /* ---------- Scoreboard ---------- */
   .scoreboard{
     display:grid;
@@ -261,6 +277,15 @@
     <button class="mode-btn" id="modeCpu">Lawan Komputer</button>
   </div>
 
+  <div class="difficulty-wrap" id="difficultyWrap">
+    <div class="difficulty-label">🎯 Tingkat Kesulitan Komputer</div>
+    <div class="difficulty-switch">
+      <button class="difficulty-btn" data-difficulty="easy">Mudah</button>
+      <button class="difficulty-btn active" data-difficulty="normal">Normal</button>
+      <button class="difficulty-btn" data-difficulty="hard">Sulit</button>
+    </div>
+  </div>
+
   <div class="scoreboard">
     <div class="score-block">
       <div class="score-label">❌ <span id="xLabel">Pemain 1</span></div>
@@ -284,6 +309,10 @@
     <button class="reset-btn" id="resetBtn">Main Lagi</button>
   </div>
 
+  <div style="text-align:center; color:var(--muted); font-size:10px; line-height:1.5; margin-top:4px;">
+    🏆 Pemenang pertandingan sebelumnya memulai pertandingan berikutnya.
+  </div>
+
   <div class="home-link-wrap">
     <a href="index.html#home" class="home-link"><span class="arrow">←</span> Kembali ke Beranda</a>
   </div>
@@ -301,6 +330,8 @@
   const resetBtn = document.getElementById('resetBtn');
   const mode2pBtn = document.getElementById('mode2p');
   const modeCpuBtn = document.getElementById('modeCpu');
+  const difficultyWrap = document.getElementById('difficultyWrap');
+  const difficultyBtns = document.querySelectorAll('.difficulty-btn');
 
   const WIN_LINES = [
     [0,1,2],[3,4,5],[6,7,8],
@@ -329,6 +360,7 @@
   const MOVE_LIMIT = 60; // safety cap to prevent an endless back-and-forth
 
   let vsComputer = false;
+  let difficulty = 'normal';
   let board = Array(9).fill(null);
   let placedCount = { X: 0, O: 0 };
   let phase = 'placing'; // 'placing' | 'moving'
@@ -337,6 +369,8 @@
   let gameOver = false;
   let moveCount = 0;
   let scores = { X: 0, O: 0, draw: 0 };
+  // Pemenang ronde sebelumnya berhak memulai ronde berikutnya.
+  let nextStartingPlayer = 'X';
 
   function buildBoard(){
     boardEl.innerHTML = '';
@@ -421,6 +455,10 @@
       turnBannerEl.textContent = result.reason || 'SERI!';
       turnBannerEl.classList.add('draw');
     } else {
+      // Pemenang ronde ini otomatis mendapat giliran pertama
+      // pada ronde berikutnya.
+      nextStartingPlayer = result.winner;
+
       scores[result.winner] += 1;
       const scoreEl = result.winner === 'X' ? xScoreEl : oScoreEl;
       scoreEl.textContent = scores[result.winner];
@@ -570,34 +608,69 @@
     if (gameOver) return;
 
     if (phase === 'placing'){
-      let idx = findWinningPlacement(board, AI);
-      if (idx === -1) idx = findWinningPlacement(board, HUMAN);
-      if (idx === -1){
-        const empties = getEmptyCells(board);
-        const prefOrder = [4,0,2,6,8,1,3,5,7];
-        idx = prefOrder.find(p => empties.includes(p));
+      const empties = getEmptyCells(board);
+      let idx;
+
+      if (difficulty === 'easy'){
+        // Sering memilih langkah acak.
+        idx = empties[Math.floor(Math.random() * empties.length)];
+      } else {
+        idx = findWinningPlacement(board, AI);
+        if (idx === -1 && difficulty !== 'easy') idx = findWinningPlacement(board, HUMAN);
+
+        if (idx === -1){
+          const prefOrder = [4,0,2,6,8,1,3,5,7];
+          // Normal kadang membuat pilihan kurang optimal.
+          if (difficulty === 'normal' && Math.random() < 0.25){
+            idx = empties[Math.floor(Math.random() * empties.length)];
+          } else {
+            idx = prefOrder.find(p => empties.includes(p));
+          }
+        }
       }
+
       placePiece(idx, AI);
       return;
     }
 
-    // moving phase
-    let move = findWinningMove(board, AI);
-    if (!move) move = findBlockingMove(board, AI, HUMAN);
+    const moves = getLegalMoves(board, AI);
+    if (!moves.length) return;
 
-    if (!move){
-      const moves = getLegalMoves(board, AI);
-      if (Math.random() < 0.1){
-        move = moves[Math.floor(Math.random() * moves.length)];
-      } else {
-        let bestScore = -Infinity;
-        for (const m of moves){
-          const copy = board.slice();
-          copy[m.to] = AI;
-          copy[m.from] = null;
-          let s = scoreBoardForAI(copy, AI, HUMAN);
-          s += (LINE_COUNT[m.to] - LINE_COUNT[m.from]) * 0.3;
-          if (s > bestScore){ bestScore = s; move = m; }
+    let move;
+
+    if (difficulty === 'easy'){
+      move = moves[Math.floor(Math.random() * moves.length)];
+    } else {
+      move = findWinningMove(board, AI);
+
+      if (!move) move = findBlockingMove(board, AI, HUMAN);
+
+      if (!move){
+        // Normal punya peluang memilih langkah acak, Sulit selalu memilih evaluasi terbaik.
+        if (difficulty === 'normal' && Math.random() < 0.25){
+          move = moves[Math.floor(Math.random() * moves.length)];
+        } else {
+          let bestScore = -Infinity;
+          for (const m of moves){
+            const copy = board.slice();
+            copy[m.to] = AI;
+            copy[m.from] = null;
+            let score = scoreBoardForAI(copy, AI, HUMAN);
+            score += (LINE_COUNT[m.to] - LINE_COUNT[m.from]) * 0.3;
+
+            // Mode sulit melihat apakah langkah ini langsung memberi ancaman.
+            if (difficulty === 'hard'){
+              const nextMoves = getLegalMoves(copy, AI);
+              for (const next of nextMoves){
+                const nextCopy = copy.slice();
+                nextCopy[next.to] = AI;
+                nextCopy[next.from] = null;
+                if (checkWinner(nextCopy)?.winner === AI) score += 3;
+              }
+            }
+
+            if (score > bestScore){ bestScore = score; move = m; }
+          }
         }
       }
     }
@@ -611,7 +684,9 @@
     board = Array(9).fill(null);
     placedCount = { X: 0, O: 0 };
     phase = 'placing';
-    currentPlayer = 'X';
+
+    // Pemenang pertandingan sebelumnya memulai pertandingan berikutnya.
+    currentPlayer = nextStartingPlayer;
     selected = null;
     gameOver = false;
     moveCount = 0;
@@ -621,15 +696,25 @@
 
   function resetAll(){
     scores = { X: 0, O: 0, draw: 0 };
+    nextStartingPlayer = 'X';
     xScoreEl.textContent = '0';
     oScoreEl.textContent = '0';
     drawScoreEl.textContent = '0';
     resetRound();
   }
 
+  difficultyBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      difficulty = btn.dataset.difficulty;
+      difficultyBtns.forEach(b => b.classList.toggle('active', b === btn));
+      if (vsComputer) resetAll();
+    });
+  });
+
   mode2pBtn.addEventListener('click', () => {
     if (vsComputer){
       vsComputer = false;
+      difficultyWrap.classList.remove('show');
       mode2pBtn.classList.add('active');
       modeCpuBtn.classList.remove('active');
       updateLabels();
@@ -640,6 +725,7 @@
   modeCpuBtn.addEventListener('click', () => {
     if (!vsComputer){
       vsComputer = true;
+      difficultyWrap.classList.add('show');
       modeCpuBtn.classList.add('active');
       mode2pBtn.classList.remove('active');
       updateLabels();
@@ -647,7 +733,15 @@
     }
   });
 
-  resetBtn.addEventListener('click', resetRound);
+  resetBtn.addEventListener('click', () => {
+    resetRound();
+
+    // Jika komputer memenangkan ronde sebelumnya,
+    // komputer langsung memainkan ronde berikutnya.
+    if (vsComputer && currentPlayer === AI && !gameOver){
+      setTimeout(aiTurn, 500);
+    }
+  });
 
   buildBoard();
   updateLabels();
