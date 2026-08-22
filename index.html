@@ -660,7 +660,7 @@ footer .heart { color: #ef4444; animation: heartbeat 1.5s ease infinite; display
     <div class="equalizer"><span></span><span></span><span></span><span></span></div>
     <div class="music-text">
       <span class="music-title">Lagu Favoritku</span>
-      <span class="music-artist">DJ body pata-pata</span>
+      <span class="music-artist">Ya sudahlah</span>
       <span class="music-status" id="musicStatus">Ditekan untuk main</span>
     </div>
   </div>
@@ -683,7 +683,7 @@ footer .heart { color: #ef4444; animation: heartbeat 1.5s ease infinite; display
     <li><a href="#gallery">Galeri</a></li>
     <li><a href="#portfolio">Portofolio</a></li>
     <li><a href="#contact">Kontak</a></li>
-    <li><a href="game.html"> Kertas Batu Gunting</a></li>
+    <li><a href="game.html">Kertas Batu Gunting</a></li>
     <li><a href="geser-tiga.html"> Geser Tiga</a></li>
   </ul>
   <div class="nav-actions">
@@ -789,7 +789,7 @@ footer .heart { color: #ef4444; animation: heartbeat 1.5s ease infinite; display
         <div class="progress-bar">
           <div class="progress-fill" data-width="89"></div>
         </div>
-        <span class="progress-label">0%</span>
+        <span class="progress-label">0%</span> 
       </div>
     </div>
 
@@ -1410,7 +1410,7 @@ function pauseMusic() {
 musicToggle.addEventListener('click', () => {
   if (isPlaying) {
     pauseMusic();
-    setTimeout(() => { if (!isPlaying) musicPlayer.classList.remove('open'); }, 3000);
+    setTimeout(() => { if (!isPlaying) musicPlayer.classList.remove('open'); }, 30000);
   } else {
     playMusic();
   }
