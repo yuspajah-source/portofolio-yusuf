@@ -579,6 +579,61 @@ footer .heart { color: #ef4444; animation: heartbeat 1.5s ease infinite; display
 .music-text .music-status { color: var(--text-soft); font-size: 0.75rem; }
 
 /* ============================================
+   GAMES FAB (Floating Menu Game)
+============================================ */
+.games-fab {
+  position: fixed;
+  bottom: 112px;
+  right: 30px;
+  z-index: 998;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.games-toggle {
+  width: 68px; height: 68px; border-radius: 50%; background: var(--gradient);
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  box-shadow: 0 8px 25px rgba(74, 108, 247, 0.45); position: relative;
+  border: 3px solid rgba(255, 255, 255, 0.6); color: white; font-size: 1.5rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.games-toggle:hover { transform: scale(1.08); box-shadow: 0 12px 30px rgba(74, 108, 247, 0.6); }
+.games-toggle:active { transform: scale(0.95); }
+.games-toggle.active { transform: rotate(90deg); }
+.games-toggle.active:hover { transform: rotate(90deg) scale(1.08); }
+
+.games-menu {
+  position: absolute; bottom: 82px; right: 0; min-width: 230px;
+  background: var(--card); border-radius: 18px; box-shadow: var(--shadow);
+  border: 1px solid var(--card-border); padding: 12px; display: flex; flex-direction: column; gap: 6px;
+  opacity: 0; visibility: hidden; transform: translateY(15px) scale(0.95); transform-origin: bottom right;
+  transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease;
+}
+.games-menu.open { opacity: 1; visibility: visible; transform: translateY(0) scale(1); }
+.games-menu-title {
+  font-weight: 600; font-size: 0.95rem; color: var(--text); padding: 6px 10px 10px;
+  border-bottom: 1px solid var(--card-border); margin-bottom: 4px;
+}
+.games-menu-empty { padding: 10px; color: var(--text-soft); font-size: 0.9rem; text-align: center; }
+.game-item {
+  display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px;
+  color: var(--text); transition: background 0.25s ease, transform 0.25s ease;
+}
+.game-item:hover { background: var(--bg-alt); transform: translateX(-4px); }
+body.dark .game-item:hover { background: rgba(255, 215, 0, 0.08); }
+.game-item .game-item-icon {
+  width: 36px; height: 36px; border-radius: 10px; background: var(--gradient); color: white;
+  display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0;
+}
+.game-item span { font-weight: 500; font-size: 0.95rem; }
+
+@media (max-width: 768px) {
+  .games-fab { bottom: 92px; right: 20px; }
+  .games-toggle { width: 58px; height: 58px; font-size: 1.3rem; }
+  .games-menu { bottom: 70px; min-width: 200px; }
+}
+
+/* ============================================
    LIGHTBOX
 ============================================ */
 .lightbox {
@@ -654,13 +709,21 @@ footer .heart { color: #ef4444; animation: heartbeat 1.5s ease infinite; display
   <button class="lightbox-nav lightbox-next" id="lightboxNext" aria-label="Next"><i class="fas fa-chevron-right"></i></button>
 </div>
 
+<!-- ============ GAMES FAB (Tombol Menu Game) ============ -->
+<div class="games-fab" id="gamesFab">
+  <div class="games-menu" id="gamesMenu"></div>
+  <button class="games-toggle" id="gamesToggle" aria-label="Pilih game">
+    <i class="fa-solid fa-gamepad" id="gamesIcon"></i>
+  </button>
+</div>
+
 <!-- ============ MUSIC PLAYER ============ -->
 <div class="music-player" id="musicPlayer">
   <div class="music-info">
     <div class="equalizer"><span></span><span></span><span></span><span></span></div>
     <div class="music-text">
       <span class="music-title">Lagu Favoritku</span>
-      <span class="music-artist">Ya sudahlah</span>
+      <span class="music-artist">Yaa sudahlah</span>
       <span class="music-status" id="musicStatus">Ditekan untuk main</span>
     </div>
   </div>
@@ -683,8 +746,6 @@ footer .heart { color: #ef4444; animation: heartbeat 1.5s ease infinite; display
     <li><a href="#gallery">Galeri</a></li>
     <li><a href="#portfolio">Portofolio</a></li>
     <li><a href="#contact">Kontak</a></li>
-    <li><a href="game.html">Kertas Batu Gunting</a></li>
-    <li><a href="geser-tiga.html"> Geser Tiga</a></li>
   </ul>
   <div class="nav-actions">
     <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
@@ -789,7 +850,7 @@ footer .heart { color: #ef4444; animation: heartbeat 1.5s ease infinite; display
         <div class="progress-bar">
           <div class="progress-fill" data-width="89"></div>
         </div>
-        <span class="progress-label">0%</span> 
+        <span class="progress-label">0%</span>
       </div>
     </div>
 
@@ -1012,10 +1073,13 @@ function animateOutline() {
 }
 animateOutline();
 
-document.querySelectorAll('a, button, .gallery-item, .skill-card, .edu-card, .contact-item, .hamburger, .social-links a, input, textarea').forEach(el => {
-  el.addEventListener('mouseenter', () => cursorOutline.classList.add('hover'));
-  el.addEventListener('mouseleave', () => cursorOutline.classList.remove('hover'));
-});
+function attachCursorHoverListeners() {
+  document.querySelectorAll('a, button, .gallery-item, .skill-card, .edu-card, .contact-item, .hamburger, .social-links a, input, textarea, .game-item').forEach(el => {
+    el.addEventListener('mouseenter', () => cursorOutline.classList.add('hover'));
+    el.addEventListener('mouseleave', () => cursorOutline.classList.remove('hover'));
+  });
+}
+attachCursorHoverListeners();
 
 /* ============================================
    DARK MODE
@@ -1089,7 +1153,7 @@ navLinksEl.querySelectorAll('a').forEach(link => {
     const href = link.getAttribute('href');
 
     // Hanya scroll-smooth untuk link berupa anchor (#id) di halaman ini.
-    // Link ke halaman lain (mis. game.html) dibiarkan navigasi normal.
+    // Link ke halaman lain dibiarkan navigasi normal.
     if (href.startsWith('#')) {
       e.preventDefault();
       const targetId = href.substring(1);
@@ -1410,11 +1474,73 @@ function pauseMusic() {
 musicToggle.addEventListener('click', () => {
   if (isPlaying) {
     pauseMusic();
-    setTimeout(() => { if (!isPlaying) musicPlayer.classList.remove('open'); }, 30000);
+    setTimeout(() => { if (!isPlaying) musicPlayer.classList.remove('open'); }, 3000);
   } else {
     playMusic();
   }
   musicPlayer.classList.add('open');
+});
+
+/* ============================================
+   GAMES MENU (FAB)
+   Cara menambahkan game baru: tinggal tambahkan satu
+   objek baru ke dalam array "gamesList" di bawah ini,
+   isi "name" (nama yang tampil) dan "file" (nama file
+   HTML game-nya). Ikon bersifat opsional (default fa-gamepad).
+============================================ */
+const gamesList = [
+  { name: 'Gunting Batu Kertas', file: 'game.html', icon: 'fa-hand-fist' },
+  { name: 'Geser Tiga', file: 'geser-tiga.html', icon: 'fa-chess-king' },
+  { name: 'Tic Tac Toe', file: 'tic-tac-toe.html', icon: 'fa-hashtag' },
+  { name: 'Snake', file: 'snake.html', icon: 'fa-solid fa-staff-snake' },
+  // Tambahkan game baru di sini, contoh:
+  // { name: 'Nama Game Baru', file: 'nama-file-game.html', icon: 'fa-chess' },
+];
+
+const gamesFab = document.getElementById('gamesFab');
+const gamesToggle = document.getElementById('gamesToggle');
+const gamesMenu = document.getElementById('gamesMenu');
+
+function renderGamesMenu() {
+  if (!gamesList.length) {
+    gamesMenu.innerHTML = `
+      <div class="games-menu-title">🎮 Pilih Game</div>
+      <div class="games-menu-empty">Belum ada game tersedia</div>
+    `;
+    return;
+  }
+
+  const items = gamesList.map(game => `
+    <a href="${game.file}" class="game-item">
+      <span class="game-item-icon"><i class="fas ${game.icon || 'fa-gamepad'}"></i></span>
+      <span>${game.name}</span>
+    </a>
+  `).join('');
+
+  gamesMenu.innerHTML = `<div class="games-menu-title">🎮 Pilih Game</div>${items}`;
+  attachCursorHoverListeners();
+}
+renderGamesMenu();
+
+gamesToggle.addEventListener('click', (e) => {
+  e.stopPropagation();
+  const willOpen = !gamesMenu.classList.contains('open');
+  gamesMenu.classList.toggle('open', willOpen);
+  gamesToggle.classList.toggle('active', willOpen);
+});
+
+document.addEventListener('click', (e) => {
+  if (!gamesFab.contains(e.target)) {
+    gamesMenu.classList.remove('open');
+    gamesToggle.classList.remove('active');
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    gamesMenu.classList.remove('open');
+    gamesToggle.classList.remove('active');
+  }
 });
 
 /* ============================================
