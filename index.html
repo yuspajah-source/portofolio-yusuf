@@ -531,6 +531,33 @@ footer p { font-size: 1.1rem; opacity: 0.9; }
 footer .heart { color: #ef4444; animation: heartbeat 1.5s ease infinite; display: inline-block; }
 @keyframes heartbeat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
 
+/* Thanks / QR di footer */
+.footer-thanks {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 30px;
+  padding-bottom: 30px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+.footer-thanks img {
+  width: 200px;
+  max-width: 80%;
+  height: auto;
+  border-radius: 16px;
+  border: 4px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  background: white;
+  transition: transform 0.3s ease;
+}
+.footer-thanks img:hover { transform: scale(1.05); }
+.footer-thanks .thanks-text {
+  font-size: 1.2rem;
+  font-weight: 600;
+  opacity: 1;
+}
+
 /* ============================================
    MUSIC PLAYER
 ============================================ */
@@ -994,8 +1021,13 @@ body.dark .game-item:hover { background: rgba(255, 215, 0, 0.08); }
 
 <!-- ============ FOOTER ============ -->
 <footer>
+  <div class="footer-thanks">
+    <img src="assets/images/qr.jpeg" alt="QR Code" loading="lazy">
+    <p class="thanks-text">Terimakasih orang baik 😃🙏</p>
+  </div>
   <p>&copy; <span id="currentYear"></span> Website ini dibuat dengan cinta <span class="heart">❤</span> oleh Yusuf.</p>
 </footer>
+
 
 <!-- EmailJS -->
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
